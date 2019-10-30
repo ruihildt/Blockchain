@@ -120,17 +120,17 @@ blockchain = Blockchain()
 def mine():
     # Pull data from the post
     data = request.get_json()
-    # Get the current block
-    current_block = blockchain.chain[len(blockchain.chain)]
+    # Get the current block string
+    block_string = json.dumps(blockchain.last_block, sort_keys=True).encode()
 
     # TODO: check if it's the first correct POW
-    # if True:
+    # if first_correct_POW:
     #     return jsonify({'message': "Correct proof already submitted"}), 400
 
     # check that `proof` and `id` are present in the post
     if data.proof and data.id:
         # check if the proof is correct
-        if blockchain.valid_proof(blockchain.hash(current_block), data.proof):
+        if blockchain.valid_proof(block_string, data.proof):
             # previous hash
             previous_hash = blockchain.hash(blockchain.last_block)
             # forge new block
