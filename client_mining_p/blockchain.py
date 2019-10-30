@@ -7,6 +7,7 @@ from time import time
 from uuid import uuid4
 from flask import Flask, jsonify, request
 
+
 class Blockchain(object):
     def __init__(self):
         self.chain = []
@@ -32,11 +33,13 @@ class Blockchain(object):
         """
 
         block = {
-            'index': len(self.chain) + 1, # length of the chain plus 1
-            'timestamp': time(), # use the time function
-            'transactions': self.current_transactions, # ref to the current transactions of the blockchain
-            'proof': proof, # the proof provided to the function
-            'previous_hash': previous_hash or self.hash(self.chain[-1]) # the hash supplied to the function or the one derived from previous block
+            'index': len(self.chain) + 1,  # length of the chain plus 1
+            'timestamp': time(),  # use the time function
+            # ref to the current transactions of the blockchain
+            'transactions': self.current_transactions,
+            'proof': proof,  # the proof provided to the function
+            # the hash supplied to the function or the one derived from previous block
+            'previous_hash': previous_hash or self.hash(self.chain[-1])
         }
 
         # Reset the current list of transactions
@@ -66,7 +69,6 @@ class Blockchain(object):
 
         # Create the block_string
         block_string = string_object.encode()
-        
 
         # Hash this string using sha256
         raw_hash = hashlib.sha256(block_string)
@@ -114,17 +116,30 @@ node_identifier = str(uuid4()).replace('-', '')
 blockchain = Blockchain()
 
 
-@app.route('/mine', methods=['GET'])
+@app.route('/mine', methods=['POST'])
 def mine():
-    # Run the proof of work algorithm to get the next proof
-    proof = blockchain.proof_of_work(blockchain.chain[-1])
-    # Forge the new Block by adding it to the chain with the proof
-    # create a new transaction and reward the proof
-    # TODO: blockchain.new_transaction(sender="0", recipient=node_identifier, amount=1)
-    # previous hash
-    previous_hash = blockchain.hash(blockchain.last_block)
-    # forge new block
-    block = blockchain.new_block(proof, previous_hash)
+    # Pull data from the post
+    data = request.get_json()
+    # Get the current block
+    current_block = blockchain.chain[len(blockchain.chain)]
+
+    # TODO: check if it's the first correct POW
+    # if True:
+    #     return jsonify({'message': "Correct proof already submitted"}), 400
+
+    # check that `proof` and `id` are present in the post
+    if data.proof and data.id:
+        # check if the proof is correct
+        if blockchain.valid_proof(blockchain.hash(current_block), data.proof):
+            # previous hash
+            previous_hash = blockchain.hash(blockchain.last_block)
+            # forge new block
+            block = blockchain.new_block(data.proof, previous_hash)
+            # reward the proof
+            # TODO: blockchain.new_transaction(sender="0", recipient=node_identifier, amount=1)
+            # return success message
+            return jsonify({'message': "New Block Forged"}), 200
+    return jsonify({'message': "Proof incorrect"}), 400
 
     response = {
         'message': "New Block Forged",
@@ -134,23 +149,22 @@ def mine():
         'previous_hash': block['previous_hash']
     }
 
-    return jsonify(response), 200
-
-
 @app.route('/chain', methods=['GET'])
 def full_chain():
     response = {
         # Return the chain and its current length
-        'length': len(blockchain.chain), # length
-        'chain': blockchain.chain # chain
+        'length': len(blockchain.chain),  # length
+        'chain': blockchain.chain  # chain
     }
     return jsonify(response), 200
 
-@app.route('last_block', methods=['GET'])
+
+@app.route('/last_block', methods=['GET'])
 def get_last_block():
     response = {
         'last_block': blockchain.last_block()
     }
+
 
 # Run the program on port 5000
 if __name__ == '__main__':
