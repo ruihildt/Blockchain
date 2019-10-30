@@ -122,7 +122,7 @@ class Blockchain(object):
         # hash the guess
         guess_hash = hashlib.sha256(guess).hexdigest()
         # return True or False
-        return guess_hash[:3] == "000"
+        return guess_hash[:3] == "000000"
 
 
 # Instantiate our Node
@@ -167,6 +167,11 @@ def full_chain():
     }
     return jsonify(response), 200
 
+@app.route('last_block', methods=['GET'])
+def get_last_block():
+    response = {
+        'last_block': blockchain.last_block()
+    }
 
 # Run the program on port 5000
 if __name__ == '__main__':
