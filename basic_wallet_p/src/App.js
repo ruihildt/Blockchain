@@ -1,26 +1,22 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import styled from 'styled-components';
+import Form from './components/form';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Wrapper>
+      <h1>Wallet</h1>
+      <p>Enter your username to show your user balance.</p>
+      <Form/>
+    </Wrapper>
   );
 }
+
+const Wrapper = styled.div`
+  background-color:rgba(0,0,0,0.3);
+  min-height:100vh;
+  max-width:800px;
+  margin: 0 auto;
+`
 
 export default App;
