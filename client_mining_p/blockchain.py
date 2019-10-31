@@ -50,7 +50,22 @@ class Blockchain(object):
         # Return the new block
         return block
 
-    def hash(self, block):
+    def new_transaction(self, sender, recipient, amount):
+        """
+        Creates a new transaction to go into the next mined Block
+
+        :param sender: <str> Address of the Sender
+        :param recipient: <str> Address of the Recipient
+        :param amount: <int> Amount
+        :return: <int> The index of the BLock that will hold this transaction
+        """
+        # append the sender, recipient and amount to the current transactions
+        self.current_transactions.append({ 'sender': sender, 'recipient': recipient, 'amount': amount })
+        # return the last blocks index + 1
+        return self.last_block['index'] + 1
+
+    @staticmethod
+    def hash(block):
         """
         Creates a SHA-256 hash of a Block
 
