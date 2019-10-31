@@ -103,7 +103,7 @@ class Blockchain(object):
         # hash the guess
         guess_hash = hashlib.sha256(guess).hexdigest()
         # return True or False
-        return guess_hash[:3] == "000000"
+        return guess_hash[:6] == "000000"
 
 
 # Instantiate our Node
@@ -118,36 +118,66 @@ blockchain = Blockchain()
 
 @app.route('/mine', methods=['POST'])
 def mine():
-    # Pull data from the post
-    data = request.get_json()
-    # Get the current block string
-    block_string = json.dumps(blockchain.last_block, sort_keys=True).encode()
+# handle non json responses
+    values = request.get_json()
+    # check that the required fields are in the posted data
+    required_fields = ['proof', 'id']
+    if not all(k in values for k in required_fields):
+        response = {'message': "Missing Values"}
+        return jsonify(response), 400
 
-    # TODO: check if it's the first correct POW
-    # if first_correct_POW:
-    #     return jsonify({'message': "Correct proof already submitted"}), 400
+    # get the submitted proof from the values data
+    submitted_proof = values.get('proof')
+    # determine if the proof is valid
+    last_block = blockchain.last_block
+    last_block_string = json.dumps(last_block, sort_keys=True).encode()
 
-    # check that `proof` and `id` are present in the post
-    if data.proof and data.id:
-        # check if the proof is correct
-        if blockchain.valid_proof(block_string, data.proof):
-            # previous hash
-            previous_hash = blockchain.hash(blockchain.last_block)
-            # forge new block
-            block = blockchain.new_block(data.proof, previous_hash)
-            # reward the proof
-            # TODO: blockchain.new_transaction(sender="0", recipient=node_identifier, amount=1)
-            # return success message
-            return jsonify({'message': "New Block Forged"}), 200
-    return jsonify({'message': "Proof incorrect"}), 400
+    if blockchain.valid_proof(last_block_string, submitted_proof):
+        # Forge the new Block by adding it to the chain
+        previous_hash = blockchain.hash(last_block)
+        block = blockchain.new_block(submitted_proof, previous_hash)
 
-    response = {
-        'message': "New Block Forged",
-        'index': block['index'],
-        'transactions': block['transactions'],
-        'proof': block['proof'],
-        'previous_hash': block['previous_hash']
-    }
+        # reward the miner for work
+        blockchain.new_transaction(sender="0", recipient=node_identifier, amount=1)
+
+        response = {
+            'message': "New Block Forged",
+            'index': block['index'],
+            'transactions': block['transactions'],
+            'proof': block['proof'],
+            'previous_hash': block['previous_hash']
+        }
+        return jsonify(response), 200
+    # otherwise
+    else:
+        # send a message stating that proof was invalid or already submitted
+        response = {'message': 'Proof was invalid or already submitted'}
+
+        return jsonify(response), 200
+
+
+    # # Pull data from the post
+    # data = request.get_json()
+    # # Get the current block string
+    # block_string = json.dumps(blockchain.last_block, sort_keys=True).encode()
+
+    # # TODO: check if it's the first correct POW
+    # # if first_correct_POW:
+    # #     return jsonify({'message': "Correct proof already submitted"}), 400
+
+    # # check that `proof` and `id` are present in the post
+    # if data.proof and data.id:
+    #     # check if the proof is correct
+    #     if blockchain.valid_proof(block_string, data.proof):
+    #         # previous hash
+    #         previous_hash = blockchain.hash(blockchain.last_block)
+    #         # forge new block
+    #         block = blockchain.new_block(data.proof, previous_hash)
+    #         # reward the proof
+    #         blockchain.new_transaction(sender="0", recipient=node_identifier, amount=1)
+    #         # return success message
+    #         return jsonify({'message': "New Block Forged"}), 200
+    # return jsonify({'message': "Proof incorrect"}), 400
 
 @app.route('/chain', methods=['GET'])
 def full_chain():
@@ -160,11 +190,11 @@ def full_chain():
 
 
 @app.route('/last_block', methods=['GET'])
-def get_last_block():
+def last_block():
     response = {
-        'last_block': blockchain.last_block()
+        'last_block': blockchain.last_block
     }
-
+    return json(response), 200
 
 # Run the program on port 5000
 if __name__ == '__main__':
