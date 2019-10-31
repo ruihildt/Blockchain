@@ -54,4 +54,3 @@ Remember that it is a competition.  At best, you will usually lose against the 3
 The longest chain states that the valid chain with the most blocks has the most work in it, and is therefore the valid chain.  All other branches are discarded and a complicated process involving the mempool (in Bitcoin) recovers lost transactions.
 
 
-
